@@ -1,19 +1,28 @@
-# MQTT Mastery 🚀
+ # 🌿 MQTT Mastery Project
 
-ESP32 + MQTT + React = Full IoT Dashboard
+## Project Overview
+ESP32 → HiveMQ Cloud → React Web App + Flutter Android App
 
-## What it does
-- ESP32 sends live temperature & humidity to HiveMQ Cloud
-- Node.js dashboard shows live graph
-- React app controls LED remotely
+## 📁 Project Structure
+- `esp32/` — ESP32 Arduino code
+- `react-app/` — React web dashboard (Vercel pe deployed)
+- `flutter-app/` — Flutter Android app
+- `mqtt-android/` — React Native (experimental)
 
-## Tech Stack
-- ESP32 + PlatformIO
+## 🔗 Links
+- React App: https://react-app-xi-one-83.vercel.app
+- HiveMQ: 8c77d38bb13146aeb2858d539a7cd2d0.s1.eu.hivemq.cloud
+- GitHub: https://github.com/radhapro/mqtt-mastery
+
+## 📱 Features
+- ✅ ESP32 sensor data via MQTT
+- ✅ React web dashboard
+- ✅ Flutter Android app
+- ✅ LED ON/OFF control from app
+- 🔜 DHT11 real sensor
+
+## 🛠️ Tech Stack
+- ESP32 + Arduino
 - HiveMQ Cloud (MQTT Broker)
-- Node.js + Socket.io
-- React + Vite
-
-## Projects
-- `esp32-mqtt/` - ESP32 firmware
-- `dashboard/` - Node.js live dashboard  
-- `react-app/` - React control panel
+- React.js + Vercel
+- Flutter + Dart
