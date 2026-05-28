@@ -1,0 +1,4 @@
+HIVEMQ_URL: 8c77d38bb13146aeb2858d539a7cd2d0.s1.eu.hivemq.cloud
+PORT: 8883
+USERNAME: radha
+PASSWORD: Radha@mqtt123
