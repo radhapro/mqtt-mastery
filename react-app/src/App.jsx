@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import mqtt from "mqtt";
+
 const MQTT_URL = "wss://8c77d38bb13146aeb2858d539a7cd2d0.s1.eu.hivemq.cloud:8884/mqtt";
 const MQTT_OPTIONS = {
   username: "radha",
@@ -8,26 +9,28 @@ const MQTT_OPTIONS = {
 };
 
 export default function App() {
-  const [temp, setTemp] = useState("--");
-  const [hum, setHum] = useState("--");
-  const [ledStatus, setLedStatus] = useState("--");
+  const [temp, setTemp] = useState(null);
+  const [hum, setHum] = useState(null);
+  const [ledStatus, setLedStatus] = useState("OFF");
   const [client, setClient] = useState(null);
   const [connected, setConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState("--");
+  const [alert, setAlert] = useState(false);
 
   useEffect(() => {
     const mqttClient = mqtt.connect(MQTT_URL, MQTT_OPTIONS);
-
     mqttClient.on("connect", () => {
       setConnected(true);
       mqttClient.subscribe("home/sensor");
     });
-
     mqttClient.on("message", (topic, message) => {
       const data = JSON.parse(message.toString());
       setTemp(data.temperature.toFixed(1));
       setHum(data.humidity.toFixed(1));
+      setLastUpdate(new Date().toLocaleTimeString());
+      setAlert(data.temperature > 35);
     });
-
+    mqttClient.on("disconnect", () => setConnected(false));
     setClient(mqttClient);
     return () => mqttClient.end();
   }, []);
@@ -40,40 +43,61 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "#0f172a", minHeight: "100vh", color: "white", padding: "20px", fontFamily: "Arial" }}>
-      <h1 style={{ textAlign: "center", color: "#38bdf8", marginBottom: "30px" }}>
-        🌡️ ESP32 React Dashboard
-      </h1>
-
-      <div style={{ textAlign: "center", marginBottom: "10px" }}>
-        <span style={{ background: connected ? "#22c55e" : "#ef4444", padding: "4px 12px", borderRadius: "20px", fontSize: "13px" }}>
+    <div style={{ background: "#0f172a", minHeight: "100vh", color: "white", fontFamily: "Arial", padding: "16px", maxWidth: "480px", margin: "0 auto" }}>
+      
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "24px" }}>
+        <h1 style={{ color: "#38bdf8", fontSize: "22px", marginBottom: "8px" }}>🌡️ ESP32 Dashboard</h1>
+        <span style={{ background: connected ? "#166534" : "#7f1d1d", padding: "4px 14px", borderRadius: "20px", fontSize: "12px" }}>
           {connected ? "🟢 Connected" : "🔴 Disconnected"}
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: "20px", justifyContent: "center", margin: "30px 0" }}>
-        <div style={{ background: "#1e293b", borderRadius: "16px", padding: "30px 50px", textAlign: "center" }}>
-          <p style={{ color: "#94a3b8", fontSize: "14px" }}>Temperature</p>
-          <p style={{ color: "#f97316", fontSize: "48px", fontWeight: "bold" }}>{temp}°C</p>
+      {/* Alert */}
+      {alert && (
+        <div style={{ background: "#7f1d1d", border: "1px solid #ef4444", borderRadius: "12px", padding: "12px", textAlign: "center", marginBottom: "16px", fontSize: "14px" }}>
+          ⚠️ High Temperature Alert! {temp}°C
         </div>
-        <div style={{ background: "#1e293b", borderRadius: "16px", padding: "30px 50px", textAlign: "center" }}>
-          <p style={{ color: "#94a3b8", fontSize: "14px" }}>Humidity</p>
-          <p style={{ color: "#38bdf8", fontSize: "48px", fontWeight: "bold" }}>{hum}%</p>
+      )}
+
+      {/* Sensor Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+        <div style={{ background: "#1e293b", borderRadius: "16px", padding: "20px", textAlign: "center", border: alert ? "1px solid #ef4444" : "1px solid #334155" }}>
+          <div style={{ fontSize: "32px", marginBottom: "4px" }}>🌡️</div>
+          <p style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "6px" }}>Temperature</p>
+          <p style={{ color: alert ? "#ef4444" : "#f97316", fontSize: "36px", fontWeight: "bold" }}>
+            {temp ?? "--"}°C
+          </p>
+        </div>
+        <div style={{ background: "#1e293b", borderRadius: "16px", padding: "20px", textAlign: "center", border: "1px solid #334155" }}>
+          <div style={{ fontSize: "32px", marginBottom: "4px" }}>💧</div>
+          <p style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "6px" }}>Humidity</p>
+          <p style={{ color: "#38bdf8", fontSize: "36px", fontWeight: "bold" }}>
+            {hum ?? "--"}%
+          </p>
         </div>
       </div>
 
-      <div style={{ background: "#1e293b", borderRadius: "16px", padding: "30px", textAlign: "center", maxWidth: "400px", margin: "0 auto" }}>
-        <h2 style={{ color: "#94a3b8", marginBottom: "20px" }}>💡 LED Control</h2>
-        <button onClick={() => ledControl("ON")}
-          style={{ padding: "14px 40px", background: "#22c55e", color: "white", border: "none", borderRadius: "10px", fontSize: "18px", cursor: "pointer", margin: "0 10px", fontWeight: "bold" }}>
-          ON
-        </button>
-        <button onClick={() => ledControl("OFF")}
-          style={{ padding: "14px 40px", background: "#ef4444", color: "white", border: "none", borderRadius: "10px", fontSize: "18px", cursor: "pointer", margin: "0 10px", fontWeight: "bold" }}>
-          OFF
-        </button>
-        <p style={{ color: "#94a3b8", marginTop: "15px" }}>Status: LED {ledStatus}</p>
+      {/* LED Control */}
+      <div style={{ background: "#1e293b", borderRadius: "16px", padding: "20px", marginBottom: "16px", border: "1px solid #334155" }}>
+        <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "16px", textAlign: "center" }}>💡 LED Control</p>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button onClick={() => ledControl("ON")} style={{ flex: 1, padding: "14px", background: ledStatus === "ON" ? "#16a34a" : "#166534", color: "white", border: "none", borderRadius: "12px", fontSize: "16px", cursor: "pointer", fontWeight: "bold" }}>
+            ON
+          </button>
+          <button onClick={() => ledControl("OFF")} style={{ flex: 1, padding: "14px", background: ledStatus === "OFF" ? "#dc2626" : "#7f1d1d", color: "white", border: "none", borderRadius: "12px", fontSize: "16px", cursor: "pointer", fontWeight: "bold" }}>
+            OFF
+          </button>
+        </div>
+        <p style={{ textAlign: "center", marginTop: "12px", fontSize: "13px", color: "#94a3b8" }}>
+          Status: <span style={{ color: ledStatus === "ON" ? "#4ade80" : "#f87171" }}>● LED {ledStatus}</span>
+        </p>
       </div>
+
+      {/* Last Update */}
+      <p style={{ textAlign: "center", color: "#475569", fontSize: "12px" }}>
+        Last updated: {lastUpdate}
+      </p>
     </div>
   );
 }
